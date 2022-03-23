@@ -5,20 +5,21 @@ package homework.hard
 import kotlinx.coroutines.*
 import java.io.File
 
-fun main() {
+fun main() = runBlocking<Unit> {
     val dictionaryApi = DictionaryApi()
     val words = FileReader.readFile().split(" ", "\n").toSet()
 
-    val dictionaries = findWords(dictionaryApi, words, Locale.EN)
+    val dictionaries = async(Dispatchers.IO.limitedParallelism(200)) {
+        findWords(dictionaryApi, words, Locale.EN)
+    }
 
-    dictionaries.map { dictionary ->
+    dictionaries.await().map { dictionary ->
         print("For word ${dictionary.word} i found examples: ")
         println(dictionary.meanings.map { definition -> definition.definitions.map { it.example } })
     }
 }
 
-private fun findWords(dictionaryApi: DictionaryApi, words: Set<String>, locale: Locale) =
-    runBlocking(Dispatchers.IO.limitedParallelism(200)) {
+private suspend fun findWords(dictionaryApi: DictionaryApi, words: Set<String>, locale: Locale) = coroutineScope {
         words.map {
             async {
                 try {

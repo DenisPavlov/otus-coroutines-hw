@@ -11,15 +11,12 @@ fun main() = runBlocking(Dispatchers.IO) {
     val toFindOther = 1000
 
     val timeMillis = measureTimeMillis {
-        val firstResult = async { findNumberInList(toFind, numbers) }
-        val secondResult = async { findNumberInList(toFindOther, numbers) }
-
-        val foundNumbers = listOf(
-            firstResult.await(),
-            secondResult.await(),
-        )
-
-        foundNumbers.forEach {
+        listOf(
+            async { findNumberInList(toFind, numbers) },
+            async { findNumberInList(toFindOther, numbers) },
+        ).map {
+            it.await()
+        }.forEach {
             if (it != -1) {
                 println("Your number $it found!")
             } else {
